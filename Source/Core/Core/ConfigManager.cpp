@@ -687,6 +687,12 @@ void SConfig::SetRunningGameMetadata(const std::string& game_id, const std::stri
     return;
   }
 
+  // True Crime: New York City
+  if (game_id.starts_with("G2C"))
+  {
+    bDivZeroException = true;
+  }
+
   const Core::TitleDatabase title_database;
   const DiscIO::Language language = GetLanguageAdjustedForRegion(bWii, region);
   m_title_name = title_database.GetTitleName(m_gametdb_id, language);

@@ -95,8 +95,7 @@ double ApproximateReciprocalSquareRoot(double val)
   // Special case 0
   if (mantissa == 0 && exponent == 0)
   {
-    return sign ? -std::numeric_limits<double>::infinity() :
-                  std::numeric_limits<double>::infinity();
+    return 1.0 / val;
   }
 
   // Special case NaN-ish numbers
@@ -161,7 +160,7 @@ double ApproximateReciprocal(double val)
 
   // Special case 0
   if (mantissa == 0 && exponent == 0)
-    return std::copysign(std::numeric_limits<double>::infinity(), val);
+    return 1.0 / val;
 
   // Special case NaN-ish numbers
   if (exponent == (0x7FFLL << 52))

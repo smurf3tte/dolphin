@@ -6,6 +6,7 @@
 #include "Common/CPUDetect.h"
 #include "Common/CommonTypes.h"
 #include "Common/x64Emitter.h"
+#include "Core/ConfigManager.h"
 #include "Core/CoreTiming.h"
 #include "Core/HW/ProcessorInterface.h"
 #include "Core/PowerPC/Jit64/Jit.h"
@@ -690,10 +691,20 @@ static const u32 s_fpscr_to_mxcsr[8] = {
     0x1F80, 0x7F80, 0x5F80, 0x3F80, 0x9F80, 0xFF80, 0xDF80, 0xBF80,
 };
 
+static const u32 s_fpscr_to_mxcsr_div_zero_unmask[8] = {
+    0x1D80, 0x7D80, 0x5D80, 0x3D80, 0x9D80, 0xFD80, 0xDD80, 0xBD80,
+};
+
+static auto GetFPSCRToMXCSR() -> const u32 (&)[8]
+{
+  return SConfig::GetInstance().bDivZeroException ? s_fpscr_to_mxcsr_div_zero_unmask :
+                                                    s_fpscr_to_mxcsr;
+}
+
 // Needs value of FPSCR in RSCRATCH.
 void Jit64::UpdateMXCSR()
 {
-  LEA(64, RSCRATCH2, MConst(s_fpscr_to_mxcsr));
+  LEA(64, RSCRATCH2, MConst(GetFPSCRToMXCSR()));
   AND(32, R(RSCRATCH), Imm32(7));
   LDMXCSR(MComplex(RSCRATCH2, RSCRATCH, SCALE_4, 0));
 }
@@ -759,7 +770,7 @@ void Jit64::mtfsfix(UGeckoInstruction inst)
 
   // Field 7 contains NI and RN.
   if (inst.CRFD == 7)
-    LDMXCSR(MConst(s_fpscr_to_mxcsr, imm & 7));
+    LDMXCSR(MConst(GetFPSCRToMXCSR(), imm & 7));
 }
 
 void Jit64::mtfsfx(UGeckoInstruction inst)

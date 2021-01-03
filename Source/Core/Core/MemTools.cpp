@@ -9,11 +9,16 @@
 #include <cstring>
 #include <vector>
 
+#if defined(_M_X86)
+#include <disasm.h>  // Bochs
+#endif
+
 #include "Common/CommonFuncs.h"
 #include "Common/CommonTypes.h"
 #include "Common/MsgHandler.h"
 #include "Common/Thread.h"
 
+#include "Core/ConfigManager.h"
 #include "Core/MachineContext.h"
 #include "Core/PowerPC/JitInterface.h"
 
@@ -27,6 +32,8 @@
 namespace EMM
 {
 #ifdef _WIN32
+
+static disassembler s_disasm;
 
 static LONG NTAPI Handler(PEXCEPTION_POINTERS pPtrs)
 {
@@ -75,6 +82,26 @@ static LONG NTAPI Handler(PEXCEPTION_POINTERS pPtrs)
 
   case EXCEPTION_BREAKPOINT:
     // might want to do something fun with this one day?
+    return EXCEPTION_CONTINUE_SEARCH;
+
+  case EXCEPTION_FLT_DIVIDE_BY_ZERO:
+    if (SConfig::GetInstance().bDivZeroException)
+    {
+      CONTEXT* ctx = pPtrs->ContextRecord;
+
+      char instr_buffer[1024] = "";
+      x86_insn insn = s_disasm.decode64(0, (u64)ctx->Rip, (const u8*)ctx->Rip, instr_buffer);
+
+      // (V)DIVPS/DIVSS/DIVPD/DIVSD
+      if (insn.b1 == 0x15e)
+      {
+        M128A& dst = (&ctx->Xmm0)[insn.nnn];
+        dst.Low = 0;
+        dst.High = 0;
+        ctx->Rip += insn.ilen;
+        return EXCEPTION_CONTINUE_EXECUTION;
+      }
+    }
     return EXCEPTION_CONTINUE_SEARCH;
 
   default:

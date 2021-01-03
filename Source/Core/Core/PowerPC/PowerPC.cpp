@@ -46,6 +46,9 @@ PPCDebugInterface debug_interface;
 
 static CoreTiming::EventType* s_invalidate_cache_thread_safe;
 
+static UReg_MSR s_msr_history;
+static UReg_FPSCR s_fpscr_history;
+
 double PairedSingle::PS0AsDouble() const
 {
   return Common::BitCast<double>(ps0);
@@ -270,6 +273,9 @@ void Reset()
 
   ResetRegisters();
   ppcState.iCache.Reset();
+
+  s_msr_history.Hex = 0;
+  s_fpscr_history.Hex = 0;
 }
 
 void ScheduleInvalidateCacheThreadSafe(u32 address)
@@ -440,6 +446,27 @@ void UpdatePerformanceMonitor(u32 cycles, u32 num_load_stores, u32 num_fp_inst)
 
 void CheckExceptions()
 {
+  UReg_MSR msr_set{~s_msr_history.Hex & MSR.Hex};
+  UReg_FPSCR fpscr_set{~s_fpscr_history.Hex & FPSCR.Hex};
+
+  if (msr_set.FE0)
+    NOTICE_LOG(POWERPC, "MSR[FE0] set");
+  if (msr_set.FE1)
+    NOTICE_LOG(POWERPC, "MSR[FE1] set");
+  if (fpscr_set.VE)
+    NOTICE_LOG(POWERPC, "FPSCR[VE] set");
+  if (fpscr_set.OE)
+    NOTICE_LOG(POWERPC, "FPSCR[OE] set");
+  if (fpscr_set.UE)
+    NOTICE_LOG(POWERPC, "FPSCR[UE] set");
+  if (fpscr_set.ZE)
+    NOTICE_LOG(POWERPC, "FPSCR[ZE] set");
+  if (fpscr_set.XE)
+    NOTICE_LOG(POWERPC, "FPSCR[XE] set");
+
+  s_msr_history.Hex |= MSR.Hex;
+  s_fpscr_history.Hex |= FPSCR.Hex;
+
   u32 exceptions = ppcState.Exceptions;
 
   // Example procedure:

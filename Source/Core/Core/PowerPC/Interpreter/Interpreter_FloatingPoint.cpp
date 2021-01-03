@@ -7,6 +7,7 @@
 
 #include "Common/CommonTypes.h"
 #include "Common/FloatUtils.h"
+#include "Core/ConfigManager.h"
 #include "Core/PowerPC/Interpreter/Interpreter.h"
 #include "Core/PowerPC/Interpreter/Interpreter_FPUtils.h"
 #include "Core/PowerPC/PowerPC.h"
@@ -491,7 +492,7 @@ void Interpreter::fresx(UGeckoInstruction inst)
     SetFPException(&FPSCR, FPSCR_ZX);
     FPSCR.ClearFIFR();
 
-    if (FPSCR.ZE == 0)
+    if (FPSCR.ZE == 0 || SConfig::GetInstance().bDivZeroException)
       compute_result(b);
   }
   else if (Common::IsSNAN(b))
@@ -537,7 +538,7 @@ void Interpreter::frsqrtex(UGeckoInstruction inst)
     SetFPException(&FPSCR, FPSCR_ZX);
     FPSCR.ClearFIFR();
 
-    if (FPSCR.ZE == 0)
+    if (FPSCR.ZE == 0 || SConfig::GetInstance().bDivZeroException)
       compute_result(b);
   }
   else if (Common::IsSNAN(b))

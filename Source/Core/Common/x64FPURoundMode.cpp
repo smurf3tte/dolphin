@@ -27,10 +27,10 @@ void SetPrecisionMode(PrecisionMode /* mode */)
   // x64 doesn't need this - fpu is done with SSE
 }
 
-void SetSIMDMode(int rounding_mode, bool non_ieee_mode)
+void SetSIMDMode(int rounding_mode, bool non_ieee_mode, bool div_zero_unmask)
 {
   // OR-mask for disabling FPU exceptions (bits 7-12 in the MXCSR register)
-  const u32 EXCEPTION_MASK = 0x1F80;
+  const u32 EXCEPTION_MASK = div_zero_unmask ? 0x1D80 : 0x1F80;
   // Flush-To-Zero (non-IEEE mode: denormal outputs are set to +/- 0)
   const u32 FTZ = 0x8000;
   // lookup table for FPSCR.RN-to-MXCSR.RC translation

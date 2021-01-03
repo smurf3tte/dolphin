@@ -31,7 +31,7 @@ void SetRoundMode(int mode);
 
 void SetPrecisionMode(PrecisionMode mode);
 
-void SetSIMDMode(int rounding_mode, bool non_ieee_mode);
+void SetSIMDMode(int rounding_mode, bool non_ieee_mode, bool div_zero_unmask);
 
 /*
  * There are two different flavors of float to int conversion:

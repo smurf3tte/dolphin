@@ -8,6 +8,7 @@
 #include "Common/CommonTypes.h"
 #include "Common/FPURoundMode.h"
 #include "Common/Logging/Log.h"
+#include "Core/ConfigManager.h"
 #include "Core/HW/GPFifo.h"
 #include "Core/HW/SystemTimers.h"
 #include "Core/PowerPC/Interpreter/ExceptionUtils.h"
@@ -42,7 +43,7 @@ static void FPSCRtoFPUSettings(UReg_FPSCR fp)
   }
 
   // Set SSE rounding mode and denormal handling
-  FPURoundMode::SetSIMDMode(fp.RN, fp.NI);
+  FPURoundMode::SetSIMDMode(fp.RN, fp.NI, SConfig::GetInstance().bDivZeroException);
 }
 
 static void UpdateFPSCR(UReg_FPSCR* fpscr)

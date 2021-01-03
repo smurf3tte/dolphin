@@ -121,7 +121,7 @@ void CommonAsmRoutines::GenFrsqrte()
   const void* start = GetCodePtr();
 
   // Assume input in XMM0.
-  // This function clobbers all three RSCRATCH.
+  // This function clobbers all three RSCRATCH and XMM1.
   MOVQ_xmm(R(RSCRATCH), XMM0);
 
   // Extract exponent
@@ -178,9 +178,10 @@ void CommonAsmRoutines::GenFrsqrte()
   FixupBranch skip_set_fx1 = J_CC(CC_NZ);
   OR(32, PPCSTATE(fpscr), Imm32(FPSCR_FX | FPSCR_ZX));
   SetJumpTarget(skip_set_fx1);
-  MOV(64, R(RSCRATCH2), Imm64(0x7FF0'0000'0000'0000));
-  OR(64, R(RSCRATCH2), R(RSCRATCH));
-  MOVQ_xmm(XMM0, R(RSCRATCH2));
+  MOV(64, R(RSCRATCH2), Imm64(0x3FF0'0000'0000'0000));
+  MOVQ_xmm(XMM1, R(RSCRATCH2));
+  DIVSD(XMM1, R(XMM0));
+  MOVSD(XMM0, R(XMM1));
   RET();
 
   // SNaN or QNaN or +Inf or -Inf
@@ -224,11 +225,12 @@ void CommonAsmRoutines::GenFres()
   const void* start = GetCodePtr();
 
   // Assume input in XMM0.
-  // This function clobbers all three RSCRATCH.
+  // This function clobbers all three RSCRATCH and XMM1.
   MOVQ_xmm(R(RSCRATCH), XMM0);
 
   // Zero inputs set an exception and take the complex path.
-  TEST(64, R(RSCRATCH), R(RSCRATCH));
+  MOV(64, R(RSCRATCH2), R(RSCRATCH));
+  SHL(64, R(RSCRATCH2), Imm8(1));
   FixupBranch zero = J_CC(CC_Z);
 
   MOV(64, R(RSCRATCH_EXTRA), R(RSCRATCH));
@@ -280,6 +282,11 @@ void CommonAsmRoutines::GenFres()
   FixupBranch skip_set_fx1 = J_CC(CC_NZ);
   OR(32, PPCSTATE(fpscr), Imm32(FPSCR_FX | FPSCR_ZX));
   SetJumpTarget(skip_set_fx1);
+  MOV(64, R(RSCRATCH2), Imm64(0x3FF0'0000'0000'0000));
+  MOVQ_xmm(XMM1, R(RSCRATCH2));
+  DIVSD(XMM1, R(XMM0));
+  MOVSD(XMM0, R(XMM1));
+  RET();
 
   SetJumpTarget(complex);
   ABI_PushRegistersAndAdjustStack(QUANTIZED_REGS_TO_SAVE, 8);

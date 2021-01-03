@@ -110,6 +110,7 @@ struct SConfig
   bool bFastmem;
   bool bFPRF = false;
   bool bAccurateNaNs = false;
+  bool bDivZeroException = false;
 
   int iTimingVariance = 40;  // in milli secounds
   bool bCPUThread = true;
